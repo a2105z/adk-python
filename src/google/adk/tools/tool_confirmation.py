@@ -53,7 +53,11 @@ class ToolConfirmation(BaseModel):
     ``{'response': json_string}`` wrapper format.
     """
     if response and len(response) == 1 and "response" in response:
-      return cast(
-          ToolConfirmation, cls.model_validate(json.loads(response["response"]))
-      )
-    return cast(ToolConfirmation, cls.model_validate(response))
+      parsed = cls.model_validate(json.loads(response["response"]))
+    else:
+      parsed = cls.model_validate(response)
+    if isinstance(parsed, ToolConfirmation):
+      return parsed
+    raise TypeError(
+        f"Expected ToolConfirmation instance, got {type(parsed).__name__}"
+    )
