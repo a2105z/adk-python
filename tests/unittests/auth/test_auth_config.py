@@ -164,7 +164,10 @@ def test_credential_key_is_stable_across_python_hash_seed():
           stderr=subprocess.STDOUT,
       ).strip()
     except subprocess.CalledProcessError as e:
-      sys.stderr.write(f"\n--- SUBPROCESS FAILED ---\nOUTPUT:\n{e.output}\n-------------------------\n")
+      sys.stderr.write(
+          "\n--- SUBPROCESS FAILED"
+          f" ---\nOUTPUT:\n{e.output}\n-------------------------\n"
+      )
       raise
 
   assert _run_with_seed("0") == _run_with_seed("1")

@@ -52,7 +52,10 @@ def test_importing_models_does_not_import_litellm_or_set_mode():
         env=env,
     )
   except subprocess.CalledProcessError as e:
-    sys.stderr.write(f"\n--- SUBPROCESS FAILED ---\nSTDOUT:\n{e.stdout}\nSTDERR:\n{e.stderr}\n-------------------------\n")
+    sys.stderr.write(
+        "\n--- SUBPROCESS FAILED"
+        f" ---\nSTDOUT:\n{e.stdout}\nSTDERR:\n{e.stderr}\n-------------------------\n"
+    )
     raise
   stdout_lines = result.stdout.strip().splitlines()
   assert stdout_lines == ["False", "None"]
