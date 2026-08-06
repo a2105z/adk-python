@@ -1382,3 +1382,37 @@ async def test_workflow_node_with_invalid_input_schema_raises_validation_error(
   with _mock_agent_run(agent_clone, content_text='hi'):
     with pytest.raises(ValidationError):
       await runner.run_async('{"wrong_field": "hello"}')
+
+
+def test_extract_task_delegation_fcs_skips_partial_events():
+  """Progressive-SSE partial chunks must not trigger task dispatch (#6583)."""
+  from google.adk.tools.agent_tool import _TaskAgentTool
+  from google.adk.workflow import _llm_agent_wrapper as agent_wrapper
+
+  def _fc(name: str, call_id: str) -> types.Part:
+    return types.Part(
+        function_call=types.FunctionCall(
+            name=name, args={'request': 'x'}, id=call_id
+        )
+    )
+
+  task_agent = LlmAgent(name='specialist', mode='task', model='unused')
+  tools_dict = {'specialist': _TaskAgentTool(task_agent)}
+  partial = Event(
+      author='coordinator',
+      content=types.Content(role='model', parts=[_fc('specialist', '1')]),
+      partial=True,
+  )
+  final = Event(
+      author='coordinator',
+      content=types.Content(role='model', parts=[_fc('specialist', '1')]),
+      partial=False,
+  )
+
+  assert not agent_wrapper._extract_task_delegation_fcs(  # pylint: disable=protected-access
+      partial, tools_dict
+  )
+  extracted = agent_wrapper._extract_task_delegation_fcs(  # pylint: disable=protected-access
+      final, tools_dict
+  )
+  assert [fc.id for fc in extracted] == ['1']
